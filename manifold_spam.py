@@ -5,48 +5,6 @@ A primitive spam filter for Manifold Markets
 import time
 import requests
 
-# hardcoding bad words
-BAD_WORDS = [
-    "nhà cái",
-    "cược",
-    "iddaa",
-    "bahis",
-    "bookmaker",
-    "casino",
-    #"slots",   # false positives
-    "omegle",
-    "rainbow friends",
-    "heardle",
-    "erectile dysfunction",
-    "sexual dysfunction",
-    "cbd gummies",
-    "keto gummies",
-    "ChatGPT po Polsku",
-    "ChatGPT Deutsch",
-    "ChatGPT Français",
-    "nigger",
-    "tranny",
-    "trannies",
-    "retard",
-    "faggot"
-    ]
-
-# hardcoding good words (mostly as a sanity check)
-GOOD_WORDS = [
-    "subsidized",
-    "presidential",
-    "election",
-    "global",
-    "worldwide",
-    "technology",
-    "metaculus",
-    "polymarket",
-    "CO2",
-    "Donald Trump",
-    "Joe Biden",
-    "GPT"
-]
-
 # seconds to delay (to avoid rate limiting)
 DELAY = 0.1
 
