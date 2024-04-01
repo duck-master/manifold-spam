@@ -13,7 +13,7 @@ BAD_WORDS = [
     "bahis",
     "bookmaker",
     "casino",
-    "slots",
+    #"slots",   # false positives
     "omegle",
     "rainbow friends",
     "heardle",
@@ -51,14 +51,14 @@ GOOD_WORDS = [
 DELAY = 0.1
 
 # timeout (to avoid code hanging)
-TIMEOUT = 1
+TIMEOUT = 5
 
 # API templates
 ALL_MARKETS_URL = "https://api.manifold.markets/v0/markets"
 MARKET_DESCRIPTION_TEMPLATE = "https://api.manifold.markets/v0/market/{market_id}"
 
 # helper functions
-def get_description(market_id):
+def get_detailed_market_data(market_id):
     """
     Gets a description for a Manifold market
     """
@@ -67,7 +67,7 @@ def get_description(market_id):
     my_url = MARKET_DESCRIPTION_TEMPLATE.format(market_id = market_id)
     response = requests.get(my_url, timeout = TIMEOUT)
     response.raise_for_status()
-    return response.json()["textDescription"]
+    return response.json()
 
 def check_word_list(phrase, word_list):
     """
@@ -78,41 +78,58 @@ def check_word_list(phrase, word_list):
             return True
     return False
 
-def check_market_list(market_list, bad_words, good_words, checkin = 42):
+def augment_market_list(market_list, checkin = 42):
+    """
+    Returns a list of markets with descriptions
+    """
+    assert isinstance(market_list, list)
+    result = []
+
+    # main loop
+    for i, market in enumerate(market_list):
+        market_id = market["id"]
+        result.append(get_detailed_market_data(market_id))
+
+        # checkin
+        if checkin:
+            if i % checkin == 0:
+                print(f"{i} markets scraped")
+
+    # return
+    return result
+
+def check_market_list(market_list, word_list, checkin = None):
     """
     Checks a list of markets for bad and good words
     Use the checkin parameter to get status updates
+    NOTE: this assumes that t
     """
     # input validation
     assert isinstance(market_list, list)
-    assert isinstance(bad_words, list)
-    assert isinstance(good_words, list)
-    assert isinstance(checkin, int)
+    assert isinstance(word_list, list)
+    assert isinstance(checkin, (int, type(None)))
     assert checkin >= 1
 
-    # variables to build up
-    bad_markets = []
-    good_markets = []
+    # variable to build up
+    result = []
 
     # main loop
     for i, market in enumerate(market_list):
         # extract
         title = market["question"]
-        market_id = market["id"]
-        market_description = get_description(market_id)
+        description = market["textDescription"]
 
         # check word lists
-        if check_word_list(title, bad_words) or check_word_list(market_description, bad_words):
-            bad_markets.append(market)
-        if check_word_list(title, good_words) or check_word_list(market_description, good_words):
-            good_markets.append(market)
+        if check_word_list(title, word_list) or check_word_list(description, word_list):
+            result.append(market)
 
         # checkin
-        if i % checkin == 0:
-            print(f"{i} markets checked!")
+        if checkin:
+            if i % checkin == 0:
+                print(f"{i} markets checked!")
 
     # return
-    return (bad_markets, good_markets)
+    return result
 
 # main code
 if __name__ == "__main__":
@@ -123,4 +140,13 @@ if __name__ == "__main__":
     r = requests.get(ALL_MARKETS_URL, timeout = TIMEOUT)
     r.raise_for_status()
     my_markets = r.json()
-    result = check_market_list(my_markets, bad_words = BAD_WORDS, good_words = GOOD_WORDS)
+
+    # augment market list
+    print("Scraping market descriptions...")
+    my_augmented_markets = augment_market_list(my_markets)
+
+    # check results (TODO)
+    bad_markets = check_market_list(my_markets, BAD_WORDS)
+    print(f"{len(bad_markets)} bad markets found")
+    good_markets = check_market_list(my_markets, GOOD_WORDS)
+    print(f"{len(good_markets)} good markets found")
