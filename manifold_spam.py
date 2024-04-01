@@ -136,7 +136,18 @@ if __name__ == "__main__":
     # sanity check
     print("Hello world")
 
+    # read external bad and good word lists
+    print("Reading word lists...")
+    with open("./bad_words.txt", "r") as f:
+        BAD_WORDS = f.read().split("\n")
+    BAD_WORDS = [term for term in BAD_WORDS if term != ""]
+
+    with open("./good_words.txt", "r") as f:
+        GOOD_WORDS = f.read().split("\n")
+    GOOD_WORDS = [term for term in GOOD_WORDS if term != ""] 
+
     # get all markets
+    print("Getting market data...")
     r = requests.get(ALL_MARKETS_URL, timeout = TIMEOUT)
     r.raise_for_status()
     my_markets = r.json()
