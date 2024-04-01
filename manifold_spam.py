@@ -71,10 +71,10 @@ def get_detailed_market_data(market_id):
 
 def check_word_list(phrase, word_list):
     """
-    Checks word lists
+    Checks a phrase against word lists
     """
     for term in word_list:
-        if term.lower() in phrase.lower():
+        if term in phrase or term.lower() in phrase:
             return True
     return False
 
